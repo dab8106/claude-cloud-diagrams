@@ -111,6 +111,12 @@ Bash: `python3 <script>.py`.
   still fails, fall back to a generic shape icon per `style-guide.md` and mention it to
   the user.
 - Cap retries at 3 total attempts before reporting the specific failure to the user.
+- **Look at the rendered image before returning it**, not just at whether the script exited
+  0. A clean exit doesn't mean a clean diagram — Graphviz layout bugs (edges crossing,
+  labels floating away from their edges, peer nodes rendered as a hierarchy, a legend
+  overlapping real content) only show up visually. Check specifically for: does the
+  layout imply a relationship that isn't true (see `style-guide.md`'s `constraint="false"`
+  section), do any labels look detached from their edge, does anything overlap.
 
 ## Step 7 — Return the result
 

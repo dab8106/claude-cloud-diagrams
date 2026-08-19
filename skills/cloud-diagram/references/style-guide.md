@@ -79,6 +79,31 @@ Notes:
 - This is purely for cluster/boundary titles, never for node icons — nodes always use the
   plain `Custom(name, icon_path)` form from the rest of this guide.
 
+## Peer relationships need `constraint="false"`, or they'll misrepresent a hierarchy
+
+Graphviz ranks nodes by edge direction: `a >> Edge() >> b` places `b` one rank below `a`.
+That's correct for genuine hierarchy (Terraform provisions infra, LB routes to a backend)
+but **wrong for peer-to-peer relationships drawn as directed edges** — replication,
+clustering, service mesh between equals. A 3-node Vault HA cluster with
+`active >> Edge() >> standby1` and `active >> Edge() >> standby2` renders with Active
+visually elevated above the two standbys, like a parent over children — that's not the
+architecture; all three are peer nodes in a Raft cluster. This was caught by rendering the
+diagram and looking at it, not by reasoning about the code — always do the same visual
+check for any cluster/mesh/replication relationship before shipping.
+
+Fix: add `constraint="false"` to peer-relationship edges so they're drawn but don't affect
+ranking, and add the missing edge(s) to complete the peer set instead of leaving it
+hub-and-spoke only:
+
+```python
+active >> Edge(color="#666666", style="dashed", label="Raft replication", constraint="false") >> standby1
+active >> Edge(color="#666666", style="dashed", label="Raft replication", constraint="false") >> standby2
+standby1 >> Edge(color="#666666", style="dashed", constraint="false") >> standby2
+```
+
+Applies to: HA cluster nodes, Raft/Consul replication, Kubernetes multi-master control
+planes, multi-region active-active setups — anywhere the nodes are equals, not a flow.
+
 ## Edges: color-code by connection type, don't leave everything default grey
 
 ```python
