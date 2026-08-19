@@ -1,0 +1,24 @@
+{
+  "name": "cloud-diagrams",
+  "description": "Lucidchart-quality AWS, Azure, GCP, Kubernetes, DevOps, AI/ML, and HashiCorp architecture diagrams using each vendor's real official icon set.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Dabeer Shaikh"
+  },
+  "license": "MIT",
+  "keywords": [
+    "aws",
+    "azure",
+    "gcp",
+    "google-cloud",
+    "kubernetes",
+    "terraform",
+    "vault",
+    "consul",
+    "nomad",
+    "hashicorp",
+    "devops",
+    "architecture-diagram",
+    "infrastructure"
+  ]
+}

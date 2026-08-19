@@ -1,0 +1,4 @@
+# Authoring-time only — needed to run build_icon_catalog.py when refreshing the icon
+# packs. NOT required by end users of the plugin (see ../requirements.txt).
+cairosvg
+Pillow
