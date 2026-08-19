@@ -153,6 +153,12 @@ Bash: `python3 <script>.py`.
   overlapping real content) only show up visually. Check specifically for: does the
   layout imply a relationship that isn't true (see `style-guide.md`'s `constraint="false"`
   section), do any labels look detached from their edge, does anything overlap.
+- **Specifically check that every node has a visible icon, not just floating label text.**
+  Graphviz silently drops a broken image reference and renders only the node's label — no
+  exception, no warning, exit code 0. This is a real, confirmed failure mode (e.g. a stale
+  absolute path in `${ICONS}` after the plugin directory moves) and is easy to miss on a
+  quick glance, especially across a multi-diagram batch — a text label alone, with no icon
+  above it, means that node's image path is broken and needs fixing, not a re-run.
 
 ## Step 7 — Return the result
 
