@@ -10,7 +10,7 @@ its graph layout engine: `Diagram`, `Cluster`, `Edge`, Graphviz rendering). Ever
 comes from this plugin's own bundled, official icon library in `assets/icons/` — never
 from `diagrams`' own bundled icon images, and never invented or guessed.
 
-## Step 1 — Gather requirements
+## Step 1 — Gather requirements, and ask before assuming on anything high-impact
 
 From the user's request, identify:
 - **Provider/domain(s)** involved: AWS, Azure, GCP, Kubernetes, DevOps/CI-CD, AI/ML,
@@ -32,10 +32,46 @@ From the user's request, identify:
   described the system; don't force a VPC/subnet frame onto something that isn't about
   network topology.
 
-Keep this step fast for straightforward requests — don't interrogate the user over a
-simple "draw a 3-tier AWS app" ask. Only pause to ask a clarifying question when the
-request is genuinely ambiguous (e.g. spans multiple clouds with no clear boundary, or
-names a component with no obvious icon match).
+### Ask, don't assume, on anything that would materially change the diagram
+
+Before writing any script, check the request against this list. If something on it is
+**both unspecified and would meaningfully change the diagram's structure**, ask about it
+with the question tool (batch the questions that actually apply into one call, don't ask
+one at a time) — don't silently pick a default and let the user discover it's wrong only
+after seeing the render. This list exists because every item on it caused rework in
+earlier sessions building this plugin:
+
+1. **Cloud provider / platform.** Don't default to AWS (or any provider) when the request
+   doesn't name one and it isn't clear from surrounding conversation — "draw a Vault HA
+   architecture" doesn't imply AWS. If the conversation has an established provider context
+   from recent turns, that counts as specified; a cold request does not.
+2. **Scale / node count**, for anything HA, clustered, or replicated. "3 nodes" and "5
+   nodes" are genuinely different diagrams (different quorum math, different layout), not
+   a detail to fill in silently.
+3. **Detail level**: a high-level overview (major components, one edge per relationship) or
+   a detailed/low-level view (internal subsystems called out as their own nodes — e.g. a
+   server's storage/consensus layer, specific ports/protocols on edge labels)? If the user
+   says "detailed" or "low-level" (or, symmetrically, "simple"/"high-level"), that answers
+   this — but if the request is bare ("draw a Vault architecture"), ask.
+4. **Key technology forks** where the answer changes which nodes appear at all — e.g. for
+   Vault: Integrated Storage (Raft) vs. a Consul storage backend; for Kubernetes: which
+   ingress controller or service mesh, if any; for auto-unseal: which cloud KMS, or none.
+   Don't silently pick HashiCorp's current default and hope it's what the user meant.
+5. **Scope**: does the user want just the core architecture, or should adjacent concerns
+   (auto-unseal, audit logging, monitoring, CI/CD) be included? For a bare request like
+   "draw Vault HA," ask whether to include these rather than guessing a bundle of extras
+   the user didn't ask for (or leaving out ones they wanted).
+
+**Skip the questions and go straight to drawing when the request is already fully
+specified** — e.g. "draw a 3-tier AWS web app with an ALB, EC2, and RDS" names the
+provider, the components, and implies a standard level of detail; asking anyway would be
+interrogating the user over something they already answered. The bar is: would a
+reasonable default here have a real chance of being wrong in a way that costs the user a
+regeneration cycle? If yes, ask; if the request already pins it down, don't.
+
+Also ask (this was already true, still applies) when a request is ambiguous in other ways
+— spans multiple clouds with no clear boundary, or names a component with no obvious icon
+match.
 
 ## Step 2 — Check the environment (once per session)
 
