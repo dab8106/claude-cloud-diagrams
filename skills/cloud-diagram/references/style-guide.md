@@ -86,6 +86,34 @@ Notes:
 - This is purely for cluster/boundary titles, never for node icons — nodes always use the
   plain `Custom(name, icon_path)` form from the rest of this guide.
 
+## Sibling clusters don't reliably keep declared left-to-right order
+
+When several same-level peer clusters (e.g. 3+ Availability Zones each with their own
+node(s)) are connected by `constraint="false"` peer edges (see below), Graphviz's
+crossing-minimization can freely reorder the *clusters themselves* — tested repeatedly for
+this plugin, and neither declaration order nor invisible constraint="false" ordering edges
+between the clusters reliably held the order. The result: zones render out of sequence
+(e.g. "AZ 2, AZ 3, AZ 1") and, worse, one cluster can drift away from the others with a
+large empty gap, dragging its edges into long diagonal sprawls across unrelated parts of
+the diagram.
+
+**If several peer nodes must hold a specific left-to-right order, don't put each one in
+its own sibling `Cluster` — use a flat row of plain nodes instead, with the grouping
+information (AZ, shard, region, whatever) folded into each node's caption.** Plain nodes
+in one rank hold declared order far more reliably than sibling cluster subgraphs do.
+Invisible `constraint="false"` ordering edges between the nodes (not clusters) are a
+reasonable extra nudge, but don't assume they guarantee exact order either — **always
+visually check the rendered order**, and if a specific node lands somewhere unexpected
+(this happened in testing — a "leader" node meant to render first ended up last), it's
+still fine to ship as long as every node's role is unambiguous from its own caption; don't
+burn excessive effort chasing exact positional order once the diagram is no longer
+structurally misleading (that's the bar — see the hierarchy-misrepresentation issue below,
+which does matter, vs. cosmetic left-right position, which usually doesn't once labeled).
+
+If clusters must be used, group all peer nodes' *dependent* content (e.g. a shared
+consensus/storage layer) into one place rather than splitting it per-cluster — short local
+edges within one group beat long edges sprawling between separated sibling clusters.
+
 ## Peer relationships need `constraint="false"`, or they'll misrepresent a hierarchy
 
 Graphviz ranks nodes by edge direction: `a >> Edge() >> b` places `b` one rank below `a`.
