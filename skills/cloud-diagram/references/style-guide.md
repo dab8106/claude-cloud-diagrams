@@ -61,6 +61,24 @@ Bidirectional/sync calls: plain solid line. Async/event-driven: dashed line. Sec
 credential retrieval: always dashed black regardless of provider, so it reads consistently
 as "sensitive" across every diagram this plugin produces.
 
+### When several edges converge near the same node or region
+
+Multiple edges with similar labels crossing near each other (e.g. several "provisions"
+arrows plus several "secrets"/"mesh" arrows all landing in the same corner) is the single
+biggest cause of an unreadable diagram — worse than any icon or color choice. Before
+shipping a diagram, check for this and fix it:
+
+- Switch that diagram's `splines` to `"ortho"` instead of `"spline"` — right-angle routing
+  keeps parallel edges visually separated instead of curving through the same space.
+  `"spline"` is the general default (see `graph_attr` above), but readability wins over the
+  organic look whenever a diagram has 4+ edges converging on a shared area.
+- Increase `ranksep`/`nodesep` (e.g. to `"1.2"`/`"0.9"`) to give converging edges more room.
+- If a sequence of steps is being shown (e.g. "app asks Vault for a secret, then registers
+  with Consul"), number the labels — `"1. requests dynamic secret"`, `"2. registers with
+  mesh"` — so the reader can trace order even where lines pass close together.
+- Fewer nodes means fewer converging edges — see "Don't over-populate with near-identical
+  nodes" below before you reach for layout tweaks.
+
 ## Per-provider palettes
 
 | Provider | Primary | Secondary |
@@ -92,16 +110,32 @@ curated icon set instead of relying on that package's images. Don't override `wi
 
 If a component has no entry in the relevant `references/*.md` catalog (and isn't found
 after checking the sibling domain catalogs — e.g. an AI vendor might be cloud-native and
-listed in `aws.md`/`azure.md`/`gcp.md` rather than `ai-ml.md`), don't invent or guess an
-icon path. Use a plain generic node instead:
+listed in `aws.md`/`azure.md`/`gcp.md` rather than `ai-ml.md`), don't invent or guess a
+brand icon path — but **never fall back to `diagrams.generic.blank.Blank`**. `Blank` is a
+layout spacer with no visible glyph at all; a node the reader can't identify at a glance is
+exactly the "icon is missing" failure this plugin exists to avoid. Instead pick the closest
+matching **generic shape** icon so the node is still visually legible, just unbranded:
 
 ```python
-from diagrams.generic.blank import Blank
-Blank("OpenAI")
+from diagrams.onprem.compute import Server      # unspecified app/compute instance
+from diagrams.generic.database import SQL        # unspecified database
+from diagrams.generic.network import Firewall, Router, Switch, VPN  # unspecified network gear
+from diagrams.generic.storage import Storage      # unspecified storage
 ```
 
-Tell the user in your response which components fell back to a plain box, so they know why
-those specific nodes look different from the rest.
+Tell the user in your response which components got a generic icon instead of a branded
+one, and what the closest generic match was, so they know why those specific nodes look
+different from the rest — and can tell you the real product if they want it swapped in.
+
+## Don't over-populate with near-identical nodes
+
+Two or three copies of the literal same unbranded node (e.g. "App Instance" ×2 with no
+distinguishing detail) adds visual noise without adding information — it just multiplies
+the number of edges converging on the same targets and makes the diagram harder to trace.
+Draw **one** representative node for a tier/role unless the count itself is something the
+user specifically asked about (e.g. "show 3 EC2 instances behind the load balancer") or is
+architecturally meaningful (e.g. a multi-AZ pair). When in doubt, prefer fewer nodes with
+clearer edges over more nodes that just repeat the same relationship.
 
 ## Title, subtitle, legend
 
