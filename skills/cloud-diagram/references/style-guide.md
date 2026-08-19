@@ -297,6 +297,21 @@ Tell the user in your response which components got a generic icon instead of a 
 one, and what the closest generic match was, so they know why those specific nodes look
 different from the rest — and can tell you the real product if they want it swapped in.
 
+## Not every relationship needs a visible arrow
+
+Before adding an edge, ask whether it's actually carrying information the reader needs
+to trace, or whether it's just restating something already obvious from layout. A
+"server owns its own storage" relationship repeated once per node (5 nodes = 5 near-
+identical arrows) is the clearest example: real user feedback on a 5-node Raft diagram
+was "too many arrows, confusing" — those 5 structural-pairing arrows were the single
+biggest contributor to arrow count while carrying the least information (of course a
+server has its own storage). Fix: connect the pair with `Edge(style="invis")` instead —
+this keeps them column-aligned (so the pairing still reads from position) without
+drawing a line at all. Reserve visible arrows for relationships worth tracing: real data
+flow, replication, provisioning, auth — not "this box is part of that box," which
+proximity and grouping already communicate. When you do cut a class of edge like this,
+also check the legend for a now-stale entry describing it and remove that row too.
+
 ## Don't over-populate with near-identical nodes
 
 Two or three copies of the literal same unbranded node (e.g. "App Instance" ×2 with no
