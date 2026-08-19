@@ -15,11 +15,13 @@ import shutil
 from pathlib import Path
 
 import cairosvg
+from PIL import Image
 
 PLUGIN_ROOT = Path(__file__).resolve().parent.parent
 ASSETS_DIR = PLUGIN_ROOT / "assets" / "icons"
 REFERENCES_DIR = PLUGIN_ROOT / "skills" / "cloud-diagram" / "references"
 ICON_PX = 128
+BADGE_PX = 28  # small badge size for boundary/cluster-label icons (see style-guide.md)
 
 
 def slugify(name: str) -> str:
@@ -33,6 +35,16 @@ def write_png_from_svg(svg_path: Path, out_path: Path, size: int = ICON_PX):
 
 def copy_png(src: Path, out_path: Path):
     shutil.copyfile(src, out_path)
+
+
+def resize_png(src: Path, out_path: Path, size: int = BADGE_PX):
+    """Graphviz HTML-like labels ignore <img width=/height=> attributes, so badge
+    icons used in Cluster label badges (see style-guide.md) must be pre-sized here
+    rather than scaled at render time."""
+    with Image.open(src) as im:
+        im = im.convert("RGBA")
+        im.thumbnail((size, size), Image.LANCZOS)
+        im.save(out_path)
 
 
 def write_catalog(name: str, header_note: str, rows: list[tuple[str, str, str]]):
@@ -231,6 +243,67 @@ def build_ai_ml(staging: Path):
     )
 
 
+AWS_BOUNDARY_ICONS = {
+    "aws-cloud": "AWS-Cloud_32.png",
+    "vpc": "Virtual-private-cloud-VPC_32.png",
+    "public-subnet": "Public-subnet_32.png",
+    "private-subnet": "Private-subnet_32.png",
+    "region": "Region_32.png",
+    "auto-scaling-group": "Auto-Scaling-group_32.png",
+    "corporate-data-center": "Corporate-data-center_32.png",
+}
+
+
+def build_aws_boundaries(staging: Path):
+    """Small badge icons for AWS's own boundary/group-label convention (a tiny
+    icon next to "VPC" / "Public Subnet" / "Availability Zone" etc. cluster
+    labels), sourced from AWS's official Architecture-Group-Icons set — distinct
+    from the per-service icons in build_aws(). See style-guide.md for how these
+    are used in Graphviz HTML-like Cluster labels."""
+    out_dir = ASSETS_DIR / "aws" / "boundaries"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    base = next((staging / "aws").glob("Architecture-Group-Icons_*"), None)
+    if base is None:
+        print("WARNING: AWS Architecture-Group-Icons folder not found, skipping AWS boundary badges")
+        return
+    rows = []
+    for slug, filename in AWS_BOUNDARY_ICONS.items():
+        src = base / filename
+        if not src.exists():
+            print(f"WARNING: {filename} not found in Architecture-Group-Icons, skipping")
+            continue
+        out_path = out_dir / f"{slug}.png"
+        resize_png(src, out_path)
+        rows.append((slug.replace("-", " "), f"assets/icons/aws/boundaries/{slug}.png", "cluster-label badge"))
+    write_catalog(
+        "aws-boundaries",
+        f"Small ({BADGE_PX}px) badge icons for AWS's boundary/group-label convention — used inside "
+        "Cluster labels (VPC, Public/Private Subnet, Region, Auto Scaling group, Corporate Data "
+        "Center), not as node icons. See style-guide.md \"Boundary badge icons\" for the HTML-label "
+        "recipe. Source: same AWS Architecture Icons pack as aws.md, Architecture-Group-Icons set.",
+        rows,
+    )
+
+
+def build_kubernetes_boundaries(staging: Path):
+    """Small badge icon for a Kubernetes Namespace cluster-label badge, matching
+    the same convention as build_aws_boundaries()."""
+    out_dir = ASSETS_DIR / "kubernetes" / "boundaries"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    src = staging / "k8s-icons" / "png" / "resources" / "unlabeled" / "ns-128.png"
+    if not src.exists():
+        print("WARNING: k8s namespace icon not found, skipping Kubernetes boundary badges")
+        return
+    out_path = out_dir / "namespace.png"
+    resize_png(src, out_path)
+    write_catalog(
+        "kubernetes-boundaries",
+        f"Small ({BADGE_PX}px) badge icon for a Kubernetes Namespace cluster-label badge, matching "
+        "the AWS boundary-badge convention (see aws-boundaries.md and style-guide.md).",
+        [("namespace", "assets/icons/kubernetes/boundaries/namespace.png", "cluster-label badge")],
+    )
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--staging", required=True, type=Path, help="Directory containing extracted icon packs")
@@ -244,6 +317,8 @@ def main():
     build_hashicorp(args.staging)
     build_devops(args.staging)
     build_ai_ml(args.staging)
+    build_aws_boundaries(args.staging)
+    build_kubernetes_boundaries(args.staging)
 
 
 if __name__ == "__main__":

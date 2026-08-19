@@ -17,6 +17,14 @@ def main() -> int:
     except ImportError:
         problems.append("Missing Python package `diagrams`. Fix: pip3 install diagrams")
 
+    try:
+        import PIL  # noqa: F401
+    except ImportError:
+        problems.append(
+            "Missing Python package `Pillow` (needed for diagrams with a legend). "
+            "Fix: pip3 install Pillow"
+        )
+
     if shutil.which("dot") is None:
         system = platform.system()
         if system == "Darwin":

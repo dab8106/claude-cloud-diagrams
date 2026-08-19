@@ -23,6 +23,14 @@ From the user's request, identify:
   together). Infer sensible groupings from context if the user doesn't spell them out.
 - **Connections/data flow**: what talks to what, and whether it's worth labeling the
   connection type (data flow, control plane, secrets, service mesh, provisioning).
+- **Diagram framing**: most requests are network/deployment topology (clusters = VPC /
+  subnet / AZ / namespace, per `style-guide.md`'s boundary conventions). Some are better
+  framed as a **layered/columnar pipeline** instead — e.g. a data or ML pipeline described
+  stage-by-stage ("ingest → process → store → serve") reads more clearly as clusters
+  representing pipeline stages laid out left-to-right than as a network diagram with no
+  real network boundaries to show. Pick whichever framing matches how the user actually
+  described the system; don't force a VPC/subnet frame onto something that isn't about
+  network topology.
 
 Keep this step fast for straightforward requests — don't interrogate the user over a
 simple "draw a 3-tier AWS app" ask. Only pause to ask a clarifying question when the
@@ -43,10 +51,13 @@ and stop — don't attempt to render without a working `diagrams` + Graphviz ins
 ## Step 3 — Map components to icon assets (static lookup only, no searching)
 
 For each component, read the matching catalog(s) under `references/`:
-`aws.md`, `azure.md`, `gcp.md`, `kubernetes.md`, `devops.md`, `hashicorp.md`, `ai-ml.md`.
-Each is a plain markdown table of `Name → assets/icons/<provider>/<file>.png`. This is a
-pure file read — do not grep the installed `diagrams` package, do not fetch anything from
-the internet, and do not guess a path that "looks right."
+`aws.md`, `azure.md`, `gcp.md`, `kubernetes.md`, `devops.md`, `hashicorp.md`, `ai-ml.md`
+for **node icons**, and `aws-boundaries.md`/`kubernetes-boundaries.md` for the small badge
+icons used in **cluster/boundary labels** (VPC, Subnet, Region, Namespace — see
+`style-guide.md`'s "Boundary badge icons" section; these are a different asset set from
+node icons and are never used as a node's own icon). This is a pure file read — do not
+grep the installed `diagrams` package, do not fetch anything from the internet, and do not
+guess a path that "looks right."
 
 Notes baked into the catalogs, worth remembering:
 - A component can be cloud-native (e.g. an LLM served via AWS Bedrock → check `aws.md`)
@@ -55,10 +66,12 @@ Notes baked into the catalogs, worth remembering:
   tools.
 - `hashicorp.md` and `ai-ml.md` both explicitly list a few components with **no available
   icon** (HashiCorp Boundary; OpenAI, Pinecone, Weaviate, Cohere, Chroma, LlamaIndex for
-  AI/ML) — for these, use the plain-box fallback described in `style-guide.md`, don't
-  substitute an unofficial or unlicensed logo.
-- If a component genuinely isn't in any catalog, use the plain-box fallback and tell the
-  user which node(s) fell back, rather than inventing a path.
+  AI/ML) — for these, use the generic-icon fallback described in `style-guide.md`
+  ("Missing-icon fallback" — a visible generic shape, never `diagrams.generic.blank.Blank`
+  and never an unofficial/unlicensed logo).
+- If a component genuinely isn't in any catalog, use that same generic-icon fallback and
+  tell the user which node(s) got a generic icon instead of a branded one, rather than
+  inventing a path.
 
 ## Step 4 — Load the style guide
 
@@ -95,10 +108,12 @@ Bash: `python3 <script>.py`.
   itself isn't installed. Surface `check_env.py`'s remediation message.
 - **A referenced icon path doesn't exist** (typo while transcribing from the catalog):
   re-read the relevant `references/*.md` table once, correct the path, and retry. If it
-  still fails, fall back to a plain labeled box for that node and mention it to the user.
+  still fails, fall back to a generic shape icon per `style-guide.md` and mention it to
+  the user.
 - Cap retries at 3 total attempts before reporting the specific failure to the user.
 
 ## Step 7 — Return the result
 
 Confirm the output file path and give a one-line description of what was drawn, including
-a note on any components that fell back to a plain box for lack of an available icon.
+a note on any components that fell back to a generic icon for lack of an available brand
+icon.
