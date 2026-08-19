@@ -12,13 +12,20 @@ graph_attr = {
     "fontsize": "13",
     "bgcolor": "white",
     "splines": "spline",   # organic curved edges read more "Lucid" than "ortho" (boxy/technical)
-    "pad": "0.4",
-    "nodesep": "0.6",
-    "ranksep": "0.9",
+    "pad": "0.3",
+    "nodesep": "0.5",
+    "ranksep": "0.6",
 }
 node_attr = {"fontname": "Helvetica", "fontsize": "11"}
 edge_attr = {"fontname": "Helvetica", "fontsize": "10"}
 ```
+
+These are deliberately tight — an earlier version of this guide used `ranksep: "0.9"` /
+`nodesep: "0.6"`, which reads fine for a single isolated diagram but compounds badly across
+a long rank chain (e.g. client → LB → cluster → downstream service is 4 ranks deep) into
+visibly excessive dead space, confirmed by user feedback on a real render. Only increase
+these above the defaults when edges are still crossing after applying "Reduce the edge
+count first" below — spacing is the second lever, not the first.
 
 Use `"splines": "ortho"` instead only when the user explicitly wants a more rigid/technical
 network-diagram look (e.g. network topology diagrams with strict L-shaped routing) — and
@@ -315,21 +322,57 @@ with Diagram("legend", show=False, filename="/tmp/_legend", outformat="png",
              graph_attr={"bgcolor": "white", "margin": "0"}):
     Node(legend_label, shape="plaintext")
 
-# 3. Composite by EXTENDING the canvas, not by pasting into a guessed-empty corner of
-#    the existing image — a corner that looks empty in one layout may not be in another,
-#    and overlapping real content with the legend is worse than no legend at all (also
-#    confirmed the hard way in testing). This guarantees zero overlap regardless of how
-#    the architecture itself laid out:
-main_img = Image.open("<main-output>.png").convert("RGBA")
-legend_img = Image.open("/tmp/_legend.png").convert("RGBA")
-margin = 24
-canvas = Image.new("RGBA", (main_img.width + legend_img.width + margin * 2,
-                             max(main_img.height, legend_img.height + margin * 2)),
-                    (255, 255, 255, 255))
+# 3. Autocrop both renders first -- Graphviz pads its own canvas with whitespace beyond
+#    what `pad` alone accounts for, and that padding stacks with whatever margin you add
+#    next, which is a real contributor to the "too much dead space" failure mode (also
+#    confirmed the hard way in testing):
+from PIL import ImageChops
+
+def autocrop(img, margin=16):
+    rgb = img.convert("RGB")
+    bg = Image.new("RGB", rgb.size, (255, 255, 255))
+    bbox = ImageChops.difference(rgb, bg).getbbox()
+    if not bbox:
+        return img
+    left, top, right, bottom = bbox
+    return img.crop((max(0, left - margin), max(0, top - margin),
+                      min(img.width, right + margin), min(img.height, bottom + margin)))
+
+main_img = autocrop(Image.open("<main-output>.png").convert("RGBA"))
+legend_img = autocrop(Image.open("/tmp/_legend.png").convert("RGBA"), margin=4)
+
+# 4. Composite by EXTENDING the canvas on whichever side wastes the LEAST space, not by
+#    pasting into a guessed-empty corner of the existing image (a corner that looks empty
+#    in one layout may not be in another, and overlapping real content with the legend is
+#    worse than no legend at all -- also confirmed the hard way). A tall/narrow (portrait)
+#    diagram should get the legend BELOW it; a wide/short (landscape) one should get it
+#    to the SIDE -- padding a portrait diagram sideways (or a landscape one downward)
+#    leaves a large empty block, which is exactly the failure mode being fixed here:
+margin = 20
+if main_img.height >= main_img.width:
+    new_size = (max(main_img.width, legend_img.width), main_img.height + legend_img.height + margin * 2)
+    legend_dest = ((new_size[0] - legend_img.width) // 2, main_img.height + margin)
+else:
+    new_size = (main_img.width + legend_img.width + margin * 2, max(main_img.height, legend_img.height))
+    legend_dest = (main_img.width + margin, margin)
+
+canvas = Image.new("RGBA", new_size, (255, 255, 255, 255))
 canvas.alpha_composite(main_img, dest=(0, 0))
-canvas.alpha_composite(legend_img, dest=(main_img.width + margin, margin))
+canvas.alpha_composite(legend_img, dest=legend_dest)
 canvas.convert("RGB").save("<main-output>.png")
 ```
 
 This makes `Pillow` a real runtime dependency whenever a diagram includes a legend —
 `check_env.py` verifies it alongside `diagrams`/Graphviz.
+
+## Excessive white space in general (even without a legend)
+
+If a rendered diagram looks sparse relative to its canvas even with no legend involved,
+before adding any manual fixes check, in order: (1) is `ranksep`/`nodesep` still at the
+tightened defaults above, or was it bumped up earlier in this session without a reason
+that still applies; (2) is the rank chain unnecessarily long — e.g. a client/actor node
+that doesn't add information could be dropped, collapsing one rank; (3) for a
+Pillow-composited output (legend or otherwise), was `autocrop()` applied to every image
+before compositing. Always look at the actual rendered PNG's dimensions and content
+density, not just whether the script ran — this class of issue, like the peer-relationship
+ranking issue above, is only visible by looking.
