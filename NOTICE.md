@@ -38,6 +38,13 @@ that vendor's own product in an architecture diagram — the only use this plugi
 them — is standard nominative use; this is not a license to use any mark for unrelated
 purposes (e.g. as this plugin's own logo, or to imply endorsement).
 
+## Generic AI agent icon (`assets/icons/ai-ml/agent.png`)
+Source: [Lucide](https://lucide.dev/) `bot` icon, **ISC license** (permissive, similar to
+MIT). Lucide is a generic UI icon set, not a company logo — used here for a vendor-neutral
+"AI agent" node where using an actual cloud provider's own agent icon (AWS Bedrock
+AgentCore, Azure Foundry Agent Service) would misleadingly brand an otherwise
+cloud-agnostic diagram.
+
 ## Known gaps — no icon shipped
 No CC0 or otherwise freely-redistributable icon was found for: **HashiCorp Boundary**,
 **OpenAI**, **Pinecone**, **Weaviate**, **Cohere**, **Chroma**, **LlamaIndex**. Diagrams

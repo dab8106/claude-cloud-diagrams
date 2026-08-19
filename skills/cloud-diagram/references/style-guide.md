@@ -293,6 +293,16 @@ from diagrams.generic.network import Firewall, Router, Switch, VPN  # unspecifie
 from diagrams.generic.storage import Storage      # unspecified storage
 ```
 
+**One specific, common exception: a generic "AI agent."** Don't use `Server` for this and
+don't use a cloud provider's own agent icon (AWS Bedrock AgentCore, Azure Foundry Agent
+Service/Bot Services all exist but are distinctly brand-colored — using one to represent a
+vendor-neutral agent misleadingly brands the whole diagram as that vendor's). Use
+`Custom("Agent", f"{ICONS}/ai-ml/agent.png")` instead — a dedicated, vendor-neutral robot
+icon shipped specifically for this (see `ai-ml.md`). This also matters because "Agent" is
+usually the one node repeated across most of a multi-diagram document — giving it a
+genuinely distinct, recognizable icon (not the same box as the infrastructure it's acting
+on) is worth the exception to "just use a generic shape."
+
 Tell the user in your response which components got a generic icon instead of a branded
 one, and what the closest generic match was, so they know why those specific nodes look
 different from the rest — and can tell you the real product if they want it swapped in.
