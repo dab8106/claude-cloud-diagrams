@@ -26,6 +26,16 @@ accurately reference Google Cloud technology and tools, e.g. in architecture dia
 documentation. No separate formal license document is published by Google; use is
 expected to stay within that reference-only purpose.
 
+## IBM (`assets/icons/ibm/`)
+Source: [IBM Cloud architecture icons](https://github.com/IBM-Cloud/architecture-icons),
+IBM Corporation. The repository states it is published "to provide IBM Cloud Architecture
+icons for external customers and business partners." Covers IBM Cloud platform services,
+watsonx/AI, and general security concepts (IAM, Secrets Manager, Cloud Pak for Security).
+**Does not cover the standalone IBM Security product line** (QRadar, Guardium,
+Verify/Verify Access) — no public icon stencil kit was found for these; diagrams
+referencing them use the generic-shape fallback (see
+`skills/cloud-diagram/references/style-guide.md`).
+
 ## Kubernetes (`assets/icons/kubernetes/`)
 Source: [Kubernetes community icon set](https://github.com/kubernetes/community/tree/master/icons),
 a CNCF project. Subject to [CNCF trademark usage guidelines](https://www.linuxfoundation.org/trademarks).
@@ -47,7 +57,8 @@ cloud-agnostic diagram.
 
 ## Known gaps — no icon shipped
 No CC0 or otherwise freely-redistributable icon was found for: **HashiCorp Boundary**,
-**OpenAI**, **Pinecone**, **Weaviate**, **Cohere**, **Chroma**, **LlamaIndex**. Diagrams
+**OpenAI**, **Pinecone**, **Weaviate**, **Cohere**, **Chroma**, **LlamaIndex**, **IBM
+QRadar**, **IBM Guardium**, **IBM Verify/Verify Access**. Diagrams
 referencing these use a plain generic labeled box instead (see
 `skills/cloud-diagram/references/style-guide.md`). If you have a properly licensed icon
 for any of these, `scripts/build_icon_catalog.py` can be extended to include it.

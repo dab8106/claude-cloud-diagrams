@@ -190,14 +190,23 @@ def build_kubernetes(staging: Path):
 
 
 def build_svg_set(staging_folder: Path, out_dir: Path, name: str, header_note: str, extra_rows: list[tuple[str, str, str]] = None):
+    # Skip entirely (don't touch the existing catalog) when this category's staging
+    # folder is absent -- a partial/incremental `--staging` run (e.g. adding just one
+    # new provider) must never overwrite an unrelated, already-built catalog down to
+    # just its hardcoded extra_rows. This is a real bug that happened once: running
+    # the builder with only an `ibm/` staging folder present wiped ai-ml.md/devops.md/
+    # hashicorp.md down to a few rows each, since those categories' staging folders
+    # weren't present in that particular run.
+    if not staging_folder.exists():
+        print(f"WARNING: {staging_folder} not found, leaving existing {name}.md untouched")
+        return
     out_dir.mkdir(parents=True, exist_ok=True)
     rows = list(extra_rows or [])
-    if staging_folder.exists():
-        for svg in sorted(staging_folder.glob("*.svg")):
-            slug = slugify(svg.stem)
-            out_path = out_dir / f"{slug}.png"
-            write_png_from_svg(svg, out_path)
-            rows.append((svg.stem, f"assets/icons/{out_dir.name}/{slug}.png", ""))
+    for svg in sorted(staging_folder.glob("*.svg")):
+        slug = slugify(svg.stem)
+        out_path = out_dir / f"{slug}.png"
+        write_png_from_svg(svg, out_path)
+        rows.append((svg.stem, f"assets/icons/{out_dir.name}/{slug}.png", ""))
     write_catalog(name, header_note, rows)
 
 
@@ -240,6 +249,60 @@ def build_ai_ml(staging: Path):
             (v, "", "no CC0 icon available — fall back to a plain labeled box")
             for v in ["OpenAI", "Pinecone", "Weaviate", "Cohere", "Chroma", "LlamaIndex"]
         ],
+    )
+
+
+def build_ibm(staging: Path):
+    """IBM Cloud + IBM Security/AI product icons, sourced from IBM's own
+    partner-facing architecture-icons repo (github.com/IBM-Cloud/architecture-icons),
+    explicitly published "for external customers and business partners." Covers
+    IBM Cloud platform services, watsonx/AI, and general security concepts (IAM,
+    Secrets Manager, Cloud Pak for Security) -- it does NOT cover the standalone
+    IBM Security product line (QRadar, Guardium, Verify/Verify Access), which has
+    no public architecture-icon stencil kit found; those fall back to a generic
+    shape per style-guide.md."""
+    out_dir = ASSETS_DIR / "ibm"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    base = staging / "ibm" / "architecture-icons-main" / "svg"
+    if not base.exists():
+        print("WARNING: IBM architecture-icons svg folder not found, skipping IBM")
+        return
+    rows = []
+    seen = set()
+    categories = ["AI", "Actors", "Applications", "Compute", "Data & Storage",
+                  "DevOps", "Networking", "Observability", "Security",
+                  "Extra Storage", "Extra Storage 2"]
+    for category in categories:
+        cat_dir = base / category
+        if not cat_dir.exists():
+            continue
+        for svg in sorted(cat_dir.glob("*.svg")):
+            slug = slugify(svg.stem)
+            if slug in seen or not slug:
+                continue
+            seen.add(slug)
+            out_path = out_dir / f"{slug}.png"
+            try:
+                write_png_from_svg(svg, out_path)
+            except Exception as e:
+                print(f"WARNING: failed to convert {svg}: {e}")
+                seen.discard(slug)
+                continue
+            rows.append((svg.stem, f"assets/icons/ibm/{slug}.png", category))
+    rows.extend(
+        (v, "", "no public icon/stencil found — fall back to a generic shape")
+        for v in ["QRadar", "Guardium", "Verify / Verify Access"]
+    )
+    write_catalog(
+        "ibm",
+        "Source: official IBM Cloud architecture icons "
+        "(github.com/IBM-Cloud/architecture-icons), published by IBM \"for external "
+        "customers and business partners\" — covers IBM Cloud platform services, "
+        "watsonx/AI, and general security concepts (IAM, Secrets Manager, Cloud Pak "
+        "for Security). **Does not cover the standalone IBM Security product line** "
+        "(QRadar, Guardium, Verify/Verify Access) — no public icon stencil kit found "
+        "for these; use the generic-shape fallback per style-guide.md.",
+        rows,
     )
 
 
@@ -317,6 +380,7 @@ def main():
     build_hashicorp(args.staging)
     build_devops(args.staging)
     build_ai_ml(args.staging)
+    build_ibm(args.staging)
     build_aws_boundaries(args.staging)
     build_kubernetes_boundaries(args.staging)
 

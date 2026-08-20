@@ -1,5 +1,5 @@
 ---
-description: Generate Lucidchart-quality architecture diagrams for AWS, Azure, GCP, Kubernetes, DevOps/CI-CD pipelines, AI/ML systems, and HashiCorp (Terraform/Vault/Consul/Nomad) using each vendor's real, official icon set. Use whenever the user asks to draw, sketch, or generate a cloud architecture diagram, infrastructure diagram, system diagram, deployment diagram, Kubernetes diagram, DevOps pipeline diagram, AI/ML architecture diagram, or a reference architecture for AWS/Azure/GCP/Kubernetes/Terraform/Vault/Consul/Nomad. Also covers requests like "diagram this architecture", "draw our infra", or "make this look like a Lucidchart diagram".
+description: Generate Lucidchart-quality architecture diagrams for AWS, Azure, GCP, IBM Cloud/watsonx/Cloud Pak, Kubernetes, DevOps/CI-CD pipelines, AI/ML systems, and HashiCorp (Terraform/Vault/Consul/Nomad) using each vendor's real, official icon set. Use whenever the user asks to draw, sketch, or generate a cloud architecture diagram, infrastructure diagram, system diagram, deployment diagram, Kubernetes diagram, DevOps pipeline diagram, AI/ML architecture diagram, or a reference architecture for AWS/Azure/GCP/IBM/Kubernetes/Terraform/Vault/Consul/Nomad. Also covers requests like "diagram this architecture", "draw our infra", or "make this look like a Lucidchart diagram".
 ---
 
 # Cloud / infra architecture diagrams
@@ -87,19 +87,23 @@ and stop — don't attempt to render without a working `diagrams` + Graphviz ins
 ## Step 3 — Map components to icon assets (static lookup only, no searching)
 
 For each component, read the matching catalog(s) under `references/`:
-`aws.md`, `azure.md`, `gcp.md`, `kubernetes.md`, `devops.md`, `hashicorp.md`, `ai-ml.md`
-for **node icons**, and `aws-boundaries.md`/`kubernetes-boundaries.md` for the small badge
-icons used in **cluster/boundary labels** (VPC, Subnet, Region, Namespace — see
-`style-guide.md`'s "Boundary badge icons" section; these are a different asset set from
-node icons and are never used as a node's own icon). This is a pure file read — do not
-grep the installed `diagrams` package, do not fetch anything from the internet, and do not
-guess a path that "looks right."
+`aws.md`, `azure.md`, `gcp.md`, `ibm.md`, `kubernetes.md`, `devops.md`, `hashicorp.md`,
+`ai-ml.md` for **node icons**, and `aws-boundaries.md`/`kubernetes-boundaries.md` for the
+small badge icons used in **cluster/boundary labels** (VPC, Subnet, Region, Namespace —
+see `style-guide.md`'s "Boundary badge icons" section; these are a different asset set
+from node icons and are never used as a node's own icon). This is a pure file read — do
+not grep the installed `diagrams` package, do not fetch anything from the internet, and do
+not guess a path that "looks right."
 
 Notes baked into the catalogs, worth remembering:
 - A component can be cloud-native (e.g. an LLM served via AWS Bedrock → check `aws.md`)
   or third-party app-layer (e.g. LangChain → check `ai-ml.md`). Check the most specific
   catalog first, then the provider catalog, then `ai-ml.md`/`devops.md` for cross-cutting
   tools.
+- `ibm.md` covers IBM Cloud platform services, watsonx/AI, and general security concepts
+  (IAM, Secrets Manager, Cloud Pak for Security) — it does **not** cover the standalone IBM
+  Security product line (QRadar, Guardium, Verify/Verify Access); no public icon stencil
+  kit exists for these as of this writing, so they use the generic-icon fallback.
 - `hashicorp.md` and `ai-ml.md` both explicitly list a few components with **no available
   icon** (HashiCorp Boundary; OpenAI, Pinecone, Weaviate, Cohere, Chroma, LlamaIndex for
   AI/ML) — for these, use the generic-icon fallback described in `style-guide.md`

@@ -1,8 +1,9 @@
 # cloud-diagrams
 
 A Claude Code plugin that generates **Lucidchart-quality architecture diagrams** for AWS,
-Azure, GCP, Kubernetes, DevOps/CI-CD, AI/ML, and HashiCorp (Terraform, Vault, Consul,
-Nomad) — using each vendor's real, official icon set, not generic boxes.
+Azure, GCP, IBM Cloud/watsonx/Cloud Pak, Kubernetes, DevOps/CI-CD, AI/ML, and HashiCorp
+(Terraform, Vault, Consul, Nomad) — using each vendor's real, official icon set, not
+generic boxes.
 
 | | |
 |---|---|
@@ -23,9 +24,12 @@ it asks rather than picking a default and hoping. See `SKILL.md`'s "Ask, don't a
 section for the exact checklist.
 
 Icon sourcing: `AWS Architecture Icons`, `Azure Architecture Icons`, and `Google Cloud
-Icons` downloaded directly from each vendor's official page; the Kubernetes community icon
-set; and CC0 icons from Simple Icons for HashiCorp tools, common DevOps tooling, and
-AI/ML vendors. See [`NOTICE.md`](NOTICE.md) for exact sources and usage terms per icon.
+Icons` downloaded directly from each vendor's official page; IBM's official
+partner-facing [architecture-icons](https://github.com/IBM-Cloud/architecture-icons) repo
+(IBM Cloud, watsonx, general security concepts — not the standalone QRadar/Guardium/Verify
+product line, which has no public icon kit); the Kubernetes community icon set; and CC0
+icons from Simple Icons for HashiCorp tools, common DevOps tooling, and AI/ML vendors. See
+[`NOTICE.md`](NOTICE.md) for exact sources and usage terms per icon.
 AWS diagrams also get the small icon **badges** official AWS reference diagrams put next
 to boundary labels (VPC, Public/Private Subnet, Region, Auto Scaling group) — not just
 plain text — matching the convention you'd see in AWS's own architecture docs.

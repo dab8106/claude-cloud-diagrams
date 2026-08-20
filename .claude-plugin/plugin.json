@@ -1,7 +1,7 @@
 {
   "name": "cloud-diagrams",
-  "description": "Lucidchart-quality AWS, Azure, GCP, Kubernetes, DevOps, AI/ML, and HashiCorp architecture diagrams using each vendor's real official icon set.",
-  "version": "0.2.0",
+  "description": "Lucidchart-quality AWS, Azure, GCP, IBM Cloud, Kubernetes, DevOps, AI/ML, and HashiCorp architecture diagrams using each vendor's real official icon set.",
+  "version": "0.3.0",
   "author": {
     "name": "Dabeer Shaikh"
   },
@@ -11,6 +11,9 @@
     "azure",
     "gcp",
     "google-cloud",
+    "ibm",
+    "ibm-cloud",
+    "watsonx",
     "kubernetes",
     "terraform",
     "vault",
